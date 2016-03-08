@@ -1,3 +1,3 @@
 # BNP_PARIBAS_PROJECT_COMPETITION
-<h2><i><b>Team :DataLions
+<h3><i><b>Team :<h2>DataLions</h2></b></i></h3>
 BNP_PARIBAS_PROJECT_COMPETITION
