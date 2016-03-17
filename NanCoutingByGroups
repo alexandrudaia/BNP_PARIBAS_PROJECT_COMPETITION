@@ -1,0 +1,52 @@
+#THIS  SIMPLE ALGHORITM  IS REPLACING  NANS BY  NANS  GROUP COUTING
+#IF  YOU  HAVE some row   starting like  1,2,NAN,NAN,NAN ,7,13....  the replacemenet   will  make it  1,2,3,3,3,7,13 and so   on..
+library(readr)
+train <- read_csv("d:/paris/train.csv")
+ 
+for(r  in 1:nrow(train))
+{
+  print(r)
+  print(dim(train))
+  row=train[r,1:ncol(train)]
+  na_idx=c()
+  for (col in 1:length(row))
+  {
+    if(is.na(row[col]))
+    {
+      na_idx=c(na_idx,col)
+    }
+  }
+  trace=c()
+  dif=c()
+  if(length(na_idx!=0))
+  {
+  for(k in 1:length(na_idx))
+  { 
+    if(!na_idx[k]%in%trace)
+    {
+      
+      elem=na_idx[k]
+      trace=c(trace,na_idx[k])
+ 
+      temp=elem
+      while(temp%in%na_idx)
+      {
+        temp=temp+1
+        trace=c(trace,temp)
+        
+      }
+      dif=c(dif,temp-elem)
+      
+      row[elem:(temp-1)]=temp-elem
+      train[r,1:ncol(train)]=row
+    }
+    
+  }
+  }
+ 
+ }
+ 
+ 
+write.csv(train,"d:/anothertrain.csv",row.names=F)
+write.csv(test,"d:/anothertest.csv",row.names=F)
+ 
