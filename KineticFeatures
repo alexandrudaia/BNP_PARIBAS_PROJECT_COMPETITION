@@ -1,0 +1,212 @@
+#SOME    FEATURE  ENGINEERING INCLUDING KINETIC  FEATURES -  THE PROCEDURE IS SIMMILAR FOR  TEST   DATA SET
+
+train=read.csv('d:/paris/train.csv',header=T,sep=",")
+library(caret)
+target=train$target
+
+ 
+#v22  is seen  by R as factor- the  joint letters    has  almost uniform  distribution so  not  good  -need to split
+train[,"v22"]=as.character(train[,"v22"])
+feat22a=c()
+for(i in (1:nrow(train)))
+    {
+  val=train[i,"v22"]
+  val=unlist(strsplit(val, ""))
+  feat22a=c(feat22a,val[1])
+}
+feat22b=c()
+for(i in (1:nrow(train)))
+{
+  val=train[i,"v22"]
+  val=unlist(strsplit(val, ""))
+  feat22b=c(feat22b,val[2])
+}
+
+feat22c=c()
+for(i in (1:nrow(train)))
+{
+  val=train[i,"v22"]
+  val=unlist(strsplit(val, ""))
+  feat22c=c(feat22c,val[1])
+}
+train[,"feat22a"]=log(as.numeric(as.factor(feat22a)))
+train[,"feat22b"]=log(as.numeric(as.factor(feat22b)))
+train[,"feat22c"]=log(as.numeric(as.factor(feat22c)))
+
+
+#remove id and   v22
+train=train[,-which(names(train)%in%c("ID","v22"))]
+#get  categorical  features names
+feat_names=names(train)[2:dim(train)[2]]
+categorical=c()
+for(f  in feat_names){
+  if((class(train[,f])=="factor")==TRUE)
+  {
+    categorical=c(categorical,f)
+  }
+
+}
+idx_cat=which(names(train)%in%categorical)
+idx_cat=c(1,idx_cat)
+idx_cat=idx_cat[-17]#cause there is no  indexes  between   v112 and v113
+#1....................................................................19
+# 0   4  24  30  31  47  52  56  66  71  74  75  79  91 107 110 113 125
+#temp=train[1:5,]
+library(ff)
+ 
+n=length(idx_cat)-1
+features=matrix(,dim(train)[1],17)
+for( i in (1:n))
+  {
+  print("Generation new  feature .... :)")
+       j=i+1
+  
+ 
+       left_margin=idx_cat[i]+1
+       right_margin=idx_cat[j]-1
+ 
+       #print(c(left_margin,right_margin))#- so  I am generating  all subrgoups now
+       #caesar commodus  needs for  all  this subrroups make new features
+ 
+       
+       for(k in (1:nrow(train)))
+       {
+         #print(k)
+         #print(name)
+     
+         features[k,i]=as.numeric(rowSums(is.na(train[k,left_margin:right_margin])))
+         
+       }
+ 
+  }
+      
+ 
+train[,"f1"]=features[,1]
+train[,"f2"]=features[,2]
+train[,"f3"]=features[,3]
+train[,"f4"]=features[,4]
+train[,"f5"]=features[,5]
+train[,"f6"]=features[,6]
+train[,"f7"]=features[,7]
+train[,"f8"]=features[,8]
+train[,"f9"]=features[,9]
+train[,"f10"]=features[,10]
+train[,"f11"]=features[,11]
+train[,"f12"]=features[,12]
+train[,"f13"]=features[,13]
+train[,"f14"]=features[,14]
+train[,"f15"]=features[,15]
+train[,"f16"]=features[,16]
+train[,"f17"]=features[,17]
+
+
+#make  another  feature consisting  of all nans
+allNa=c()
+for(row in (1:nrow(train)))
+{
+  
+  rowNa=rowSums(is.na(train[row,2:dim(train)[2]]))
+  allNa=c(allNa,rowNa)
+}
+train[,"allNa"]=allNa
+
+#Now lets  make  kinetic  energy   for  all categoricals
+subset=train[,which(names(train)%in%categorical)]
+subset[is.na(subset)]=0
+subset[,c(1:dim(subset)[2])]=sapply(subset[,c(1:dim(subset)[2])],as.numeric)
+subset[,c(1:dim(subset)[2])]=sapply(subset[,c(1:dim(subset)[2])],as.factor) 
+for (j in c(1:18))
+{
+  subset[,j]=as.factor(subset[,j])
+}
+
+kineticCat=c()
+for(row in (1:nrow(subset)))
+{
+  r=as.numeric(subset[row,1:18])
+  freq=table(r)
+  prob=table(r)/18
+  kin=sum(prob^2)
+  kineticCat=c(kineticCat,kin)
+}
+train[,"kineticCat"]=kineticCat
+#lets  make kinetic  for  nas features now
+subset=train[,135:151]
+kineticNas=c()
+for(row in (1:nrow(subset)))
+{
+  r=as.numeric(subset[row,1:17])
+  freq=table(r)
+  prob=table(r)/17
+  kin=sum(prob^2)
+  kineticNas=c(kineticNas,kin)
+}
+
+
+train[,"kineticNans"]=kineticNas
+#lets  make kinetic energy   for rounded  continuous features
+numerical_features=which(!names(train)%in%categorical)
+numerical_features=numerical_features[-1]
+subset=train[,c(numerical_features)]
+subset=subset[,c(1:112)]
+subset[is.na(subset)]=0
+subset=round(subset)
+kineticNumeric=c()
+for(row in (1:nrow(subset)))
+{
+  r=as.numeric(subset[row,1:112])
+  freq=table(r)
+  prob=table(r)/112
+  kin=sum(prob^2)
+  kineticNumeric=c(kineticNumeric,kin)
+}
+
+train[,"kineticNumeric"]=kineticNumeric
+#lets   make   3 new features  with  v125
+newf=matrix(0,nrow(train),3)
+train[,"v125"]=as.character(train[,"v125"])
+temp=train$v125
+
+for (i in 1:length(temp) )
+{
+  elem=temp[i]
+  if (nchar(elem)==2)
+  {
+  split=unlist(strsplit(elem, ""))
+  first=split[1]
+  second=split[2]
+  newf[i,1]=first
+  newf[i,2]=second  
+  }
+  else
+  {
+    newf[i,3]=elem
+  }
+}
+
+train[,"feat125a"]=as.factor(newf[,1])
+train[,"feat125b"]=as.factor(newf[,2])
+train[,"feat125c"]=as.factor(newf[,3])
+tempTrain=train
+
+
+
+
+
+
+
+
+ 
+#now lets make everything  numerical replace  nas  and  compute   2 kinetics
+train[,c(2:dim(train)[2])]=sapply(train[,c(2:dim(train)[2])],as.numeric)
+train[is.na(train)]=-1
+train$target=as.factor((train$target))
+write.csv(train,"kineticTrain.csv",row.names=FALSE)
+
+
+
+
+
+ 
+
+ 
